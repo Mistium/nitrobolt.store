@@ -162,7 +162,8 @@
     }
 
     // ask for input;
-    let username = (prompt("Enter a username") || "Anonymous") + "-" + Date.now().toString();
+    let username = prompt("Enter a username")
+    username = (username || "Anonymous") + "-" + Date.now().toString();
     let packets = {};
     let client = { users: [] };
     let ws = new WebSocket("wss://rotur.mistium.com");
