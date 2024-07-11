@@ -14,7 +14,11 @@
   }
 
   .banner {
-    width: 100%;
+    align-items: center;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: calc(100% - 20px);
     padding: 10px;
     border-radius: 20px;
     opacity: 1;
@@ -104,7 +108,7 @@
     // fade out the banner when scrolling
     window.onscroll = function () {
       var banner = document.getElementsByClassName("banner")[0];
-      var opacity = 1 - window.scrollY / 100;
+      var opacity = 1 - window.scrollY / 600;
       banner.style.opacity = opacity;
     };
 
@@ -185,7 +189,15 @@
           if (packet.mode === "add") {
             client.users.push(packet.val);
           } else if (packet.mode === "remove") {
-            client.users = client.users.filter(user => user !== packet.val);
+            let index = -1
+              for (let i = 0; i < client.users.length; i++) {
+                let user = client.users[i]
+                if (user.uuid == packet.val.uuid) {
+                  index = i
+                  break;
+                }
+              }
+              client.users.splice(index, 1);
           } else if (packet.mode === "set") {
             client.users = packet.val;
           }
