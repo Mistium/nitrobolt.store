@@ -1,12 +1,79 @@
 <DOCTYPE html>
 
-<head>
+  <head>
+    <title>Nitrobolt Store</title>
+  </head>
+  <style>
+    body {
+      background-color: #050505;
+      color: white;
+      text-align: center;
+      font-family: Arial, sans-serif;
+    }
 
-<title>Nitrobolt Store</title>
+    .banner {
+      width: 100%;
+      padding: 10px;
+      border-radius: 20px;
+      opacity: 1;
+      transition: opacity 0.5s;
+    }
 
-</head>
+    .card {
+      background-color: #1c1c1c;
+      border-radius: 20px;
+      padding: 20px;
+      margin: 20px;
+      transition: 0.5s;
+      display: inline-block;
+      min-width: 400px;
+      border-color: #7b1c01;
+      border-width: 5px;
+      border-style: solid;
+    }
+
+    .card:hover {
+      transform: scale(1.1);
+    }
+  </style>
 
   <body>
-    WELCOME!
-this is your one stop shop for illegal nos and lightning
+    <img class="banner" src="https://raw.githubusercontent.com/Mistium/nitrobolt.store/main/assets/NITROBOLT_store_banner.png">
+    <h1>WELCOME!</h1>
+    <h3>this is your one stop shop for illegal nos and lightning</h3>
+    <br>
   </body>
+
+  <script>
+    // fade out the banner when scrolling
+    window.onscroll = function() {
+      var banner = document.getElementsByClassName("banner")[0];
+      var opacity = 1 - window.scrollY / 100;
+      banner.style.opacity = opacity;
+    };
+
+    let products = {
+      "Nitrous Oxide": {
+        price: "100 dubloons",
+        description: "A canister of nitrous oxide, perfect for your car"
+      },
+      "Lightning Bolt": {
+        price: "50 dubloons",
+        description: "A bolt of lightning, perfect for your enemies"
+      }
+    };
+
+    // make cards for each product
+    
+    for (let product in products) {
+      let card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <h2>${product}</h2>
+        <p>${products[product].price}</p>
+        <p>${products[product].description}</p>
+      `;
+      document.body.appendChild(card);
+    }
+  </script>
+</html>
