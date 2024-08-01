@@ -97,7 +97,7 @@
   <h1>WELCOME!</h1>
   <h3>this is your one stop shop for illegal nos and lightning</h3>
   <div id="dubloon-counter">Dubloons: 0</div>
-  <button class="button" onclick="increaseDubloons()">Increase Dubloons</button>
+  <button class="button" onclick="store.increaseDubloons()">Increase Dubloons</button>
   <div id="leaderboard">
     <h2>Leaderboard</h2>
     <ul id="leaderboard-list"></ul>
@@ -105,181 +105,185 @@
   <br>
 
   <script>
-    // fade out the banner when scrolling
-    window.onscroll = function () {
-      var banner = document.getElementsByClassName("banner")[0];
-      var opacity = 1 - window.scrollY / 600;
-      banner.style.opacity = opacity;
-    };
-
-    let products = {
-      "Nitrous Oxide": {
-        price: 100,
-        description: "A canister of nitrous oxide, perfect for your car"
-      },
-      "Lightning Bolt": {
-        price: 50,
-        description: "A bolt of lightning, perfect for your enemies"
-      },
-      "Thunder Clap": {
-        price: 200,
-        description: "A clap of thunder to scare off any intruders"
-      },
-      "Storm Cloud": {
-        price: 300,
-        description: "A personal storm cloud to follow your enemies"
-      },
-      "Nitro Canister Energy Drink": {
-        price: 500,
-        description: "A canister of nitrous oxide, a great refresher"
-      },
-    }
-
-    // make cards for each product
-    for (let product in products) {
-      let card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <h2>${product}</h2>
-        <p>Price: ${products[product].price} dubloons</p>
-        <p>${products[product].description}</p>
-        <button class="button" onclick="purchaseProduct(${products[product].price})">Purchase</button>
-      `;
-      document.body.appendChild(card);
-    }
-
-    let dubloons = 0;
-
-    function increaseDubloons() {
-      dubloons++;
-      document.getElementById('dubloon-counter').innerText = "Dubloons: " + dubloons;
-    }
-
-    function purchaseProduct(price) {
-      if (dubloons >= price) {
-        dubloons -= price;
-        document.getElementById('dubloon-counter').innerText = "Dubloons: " + dubloons;
-        alert("this is a scam noob, L plus skill issue");
-      } else {
-        alert("Not enough dubloons");
-      }
-    }
-
-    // ask for input;
-    let username = prompt("Enter a username")
-    username = (username || "Anonymous") + "-" + Date.now().toString();
-    let packets = {};
-    let client = { users: [] };
-    let ws = new WebSocket("wss://rotur.mistium.com");
-
-    // WebSocket connection setup
-    ws.onopen = function () {
-      console.log("Connected!");
-
-      sendHandshake();
-
-      ws.onmessage = function (event) {
-        let packet = JSON.parse(event.data);
-
-        if (packet.cmd === "client_ip") {
-          client.ip = packet.val;
-        } else if (packet.cmd === "client_obj") {
-          client.username = packet.val.username;
-        } else if (packet.cmd === "ulist") {
-          if (packet.mode === "add") {
-            client.users.push(packet.val);
-          } else if (packet.mode === "remove") {
-            let index = -1
-              for (let i = 0; i < client.users.length; i++) {
-                let user = client.users[i]
-                if (user.uuid == packet.val.uuid) {
-                  index = i
-                  break;
-                }
-              }
-              client.users.splice(index, 1);
-          } else if (packet.mode === "set") {
-            client.users = packet.val;
-          }
-          updateLeaderboard();
-        }
-
-        if (packet.cmd === "pmsg") {
-          packet.origin = packet.origin.username;
-          delete packet.rooms;
-          delete packet.cmd;
-          packet.client = packet.val.client;
-          packet.source = packet.val.source;
-          packet.payload = packet.val.payload;
-
-          if (!packets[packet.target]) {
-            packets[packet.val.target] = [];
-          }
-          packets[packet.val.target].push(packet);
-          delete packet.val;
-        }
-
-        if (packet.listener === "handshake_cfg") {
-          setUsername(username);
-        }
-        if (packet.listener === "set_username_cfg") {
-          client.username = username;
-          linkRoom(["NitroBoltstore"]);
-        }
-        if (packet.listener === "link_cfg") {
-          client.room = packet.val;
-        }
+    (() => {
+      // fade out the banner when scrolling
+      window.onscroll = function () {
+        var banner = document.getElementsByClassName("banner")[0];
+        var opacity = 1 - window.scrollY / 600;
+        banner.style.opacity = opacity;
       };
-    };
-
-    function sendHandshake() {
-      let msg = {
-        cmd: "handshake",
-        val: {
-          language: "Javascript",
-          version: {
-            editorType: "nitrobolt.store",
-            versionNumber: null
-          }
+  
+      let products = {
+        "Nitrous Oxide": {
+          price: 100,
+          description: "A canister of nitrous oxide, perfect for your car"
         },
-        listener: "handshake_cfg"
+        "Lightning Bolt": {
+          price: 50,
+          description: "A bolt of lightning, perfect for your enemies"
+        },
+        "Thunder Clap": {
+          price: 200,
+          description: "A clap of thunder to scare off any intruders"
+        },
+        "Storm Cloud": {
+          price: 300,
+          description: "A personal storm cloud to follow your enemies"
+        },
+        "Nitro Canister Energy Drink": {
+          price: 500,
+          description: "A canister of nitrous oxide, a great refresher"
+        },
+      }
+  
+      // make cards for each product
+      for (let product in products) {
+        let card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <h2>${product}</h2>
+          <p>Price: ${products[product].price} dubloons</p>
+          <p>${products[product].description}</p>
+          <button class="button" onclick="store.purchaseProduct(${products[product].price})">Purchase</button>
+        `;
+        document.body.appendChild(card);
+      }
+  
+      let dubloons = 0;
+  
+      function increaseDubloons() {
+        dubloons++;
+        document.getElementById('dubloon-counter').innerText = "Dubloons: " + dubloons;
+      }
+  
+      function purchaseProduct(price) {
+        if (dubloons >= price) {
+          dubloons -= price;
+          document.getElementById('dubloon-counter').innerText = "Dubloons: " + dubloons;
+          alert("this is a scam noob, L plus skill issue");
+        } else {
+          alert("Not enough dubloons");
+        }
+      }
+  
+      // ask for input;
+      let username = prompt("Enter a username")
+      username = (username || "Anonymous") + "-" + Date.now().toString();
+      let packets = {};
+      let client = { users: [] };
+      let ws = new WebSocket("wss://rotur.mistium.com");
+  
+      // WebSocket connection setup
+      ws.onopen = function () {
+        console.log("Connected!");
+  
+        sendHandshake();
+  
+        ws.onmessage = function (event) {
+          let packet = JSON.parse(event.data);
+  
+          if (packet.cmd === "client_ip") {
+            client.ip = packet.val;
+          } else if (packet.cmd === "client_obj") {
+            client.username = packet.val.username;
+          } else if (packet.cmd === "ulist") {
+            if (packet.mode === "add") {
+              client.users.push(packet.val);
+            } else if (packet.mode === "remove") {
+              let index = -1
+                for (let i = 0; i < client.users.length; i++) {
+                  let user = client.users[i]
+                  if (user.uuid == packet.val.uuid) {
+                    index = i
+                    break;
+                  }
+                }
+                client.users.splice(index, 1);
+            } else if (packet.mode === "set") {
+              client.users = packet.val;
+            }
+            updateLeaderboard();
+          }
+  
+          if (packet.cmd === "pmsg") {
+            packet.origin = packet.origin.username;
+            delete packet.rooms;
+            delete packet.cmd;
+            packet.client = packet.val.client;
+            packet.source = packet.val.source;
+            packet.payload = packet.val.payload;
+  
+            if (!packets[packet.target]) {
+              packets[packet.val.target] = [];
+            }
+            packets[packet.val.target].push(packet);
+            delete packet.val;
+          }
+  
+          if (packet.listener === "handshake_cfg") {
+            setUsername(username);
+          }
+          if (packet.listener === "set_username_cfg") {
+            client.username = username;
+            linkRoom(["NitroBoltstore"]);
+          }
+          if (packet.listener === "link_cfg") {
+            client.room = packet.val;
+          }
+        };
       };
-      ws.send(JSON.stringify(msg));
-    }
-
-    function setUsername(username) {
-      let msg = {
-        cmd: "setid",
-        val: username,
-        listener: "set_username_cfg"
-      };
-      ws.send(JSON.stringify(msg));
-    }
-
-    function linkRoom(room) {
-      let msg = {
-        cmd: "link",
-        val: room,
-        listener: "link_cfg"
-      };
-      ws.send(JSON.stringify(msg));
-    }
-
-    function updateLeaderboard() {
-      let leaderboardList = document.getElementById("leaderboard-list");
-      leaderboardList.innerHTML = "";
-
-      client.users.sort((a, b) => a - b).forEach(user => {
-        let li = document.createElement("li");
-        let timeOnline = Math.floor((Date.now() - parseInt(user.username.split("-")[1])) / 1000);
-        li.textContent = `User: ${user.username.split("-")[0]}, Time online: ${timeOnline} seconds`;
-        leaderboardList.appendChild(li);
-      });
-    }
-
-    setInterval(() => {
-      updateLeaderboard();
-    }, 1000);
+  
+      function sendHandshake() {
+        let msg = {
+          cmd: "handshake",
+          val: {
+            language: "Javascript",
+            version: {
+              editorType: "nitrobolt.store",
+              versionNumber: null
+            }
+          },
+          listener: "handshake_cfg"
+        };
+        ws.send(JSON.stringify(msg));
+      }
+  
+      function setUsername(username) {
+        let msg = {
+          cmd: "setid",
+          val: username,
+          listener: "set_username_cfg"
+        };
+        ws.send(JSON.stringify(msg));
+      }
+  
+      function linkRoom(room) {
+        let msg = {
+          cmd: "link",
+          val: room,
+          listener: "link_cfg"
+        };
+        ws.send(JSON.stringify(msg));
+      }
+  
+      function updateLeaderboard() {
+        let leaderboardList = document.getElementById("leaderboard-list");
+        leaderboardList.innerHTML = "";
+  
+        client.users.sort((a, b) => a - b).forEach(user => {
+          let li = document.createElement("li");
+          let timeOnline = Math.floor((Date.now() - parseInt(user.username.split("-")[1])) / 1000);
+          li.textContent = `User: ${user.username.split("-")[0]}, Time online: ${timeOnline} seconds`;
+          leaderboardList.appendChild(li);
+        });
+      }
+  
+      const updateInterval = setInterval(() => {
+        updateLeaderboard();
+      }, 1000);
+  
+      window.store = { updateInterval, updateLeaderboard, linkRoom, setUsername, sendHandshake, username, packets, client, ws, purchaseProduct, increseDubloons, dubloons, products };
+    })();
 
   </script>
 </body>
